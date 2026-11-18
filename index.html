@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kiosk Display</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #000;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <iframe id="slidesFrame" src="https://docs.google.com/presentation/d/1QvCUJe7mU4KQkWHwov67XCLKB9BwuZY0W99XEl9aOz0/edit?usp=sharing" allowfullscreen="true"></iframe>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbyz3OnVcZ8cSiELYmNRvpWEa4Bmyc6I3VgtATTGYIiHvWfIuerW8hZ_MjKECKUpznV_qQ/exec";
+    let lastKnownUpdate = null;
+
+    async function checkForUpdates() {
+      try {
+        // Add timestamp to prevent browser caching of the API response
+        const response = await fetch(`${API_URL}?t=${Date.now()}`);
+        const data = await response.json();
+
+        if (lastKnownUpdate === null) {
+          lastKnownUpdate = data.lastUpdated;
+        } else if (data.lastUpdated > lastKnownUpdate) {
+          lastKnownUpdate = data.lastUpdated;
+          const frame = document.getElementById('slidesFrame');
+          const baseUrl = frame.src.split('&_cb=')[0];
+          frame.src = `${baseUrl}&_cb=${Date.now()}`;
+        }
+      } catch (err) {
+        console.error("Failed to check for slide updates:", err);
+      }
+    }
+
+    // Check immediately on load, then every 60 seconds
+    checkForUpdates();
+    setInterval(checkForUpdates, 60000);
+  </script>
+</body>
+</html>
